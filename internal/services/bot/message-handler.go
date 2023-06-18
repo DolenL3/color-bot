@@ -56,6 +56,9 @@ func (b *Bot) getAverageColor(imageID string, userID int64) (avgColor []int, err
 		return []int{}, errors.Wrap(err, "getting source image URL")
 	}
 	imgBytes, err := downloadFileBytes(downloadURL)
+	if err != nil {
+		return []int{}, errors.Wrap(err, "downloading source image")
+	}
 	img, _, err := image.Decode(imgBytes)
 	if err != nil {
 		return []int{}, errors.Wrap(err, "decoding source image")
@@ -125,7 +128,7 @@ func avg(numbers []int) int {
 
 // createColorPreview Creates Color preview.
 func createColorPreview(avgColor []int, msg *tgbotapi.Message) (tgbotapi.PhotoConfig, error) {
-	// create image template
+	// Create image template
 	width := 500
 	height := 500
 
@@ -134,7 +137,7 @@ func createColorPreview(avgColor []int, msg *tgbotapi.Message) (tgbotapi.PhotoCo
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
-	// Set color for each pixel.
+	// Set color for each pixel
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			img.Set(x, y, color.RGBA{uint8(avgColor[0]), uint8(avgColor[1]), uint8(avgColor[2]), 255})

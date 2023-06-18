@@ -5,6 +5,7 @@ import (
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/pkg/errors"
 )
 
 // Bot is a service with bot's logic.
@@ -36,7 +37,10 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) error {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			fmt.Println("##########################################################################")
-			b.handleMessage(update.Message)
+			err := b.handleMessage(update.Message)
+			if err != nil {
+				return errors.Wrap(err, "handling message")
+			}
 		}
 	}
 	return nil
