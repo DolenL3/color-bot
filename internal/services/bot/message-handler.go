@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 
@@ -22,6 +24,7 @@ type pixels struct {
 
 // handleMessage handles messages sent by user.
 func (b *Bot) handleMessage(msg *tgbotapi.Message) error {
+	supported := map[string]bool{"image/jpeg": true, "image/png": true, "image/gif": true}
 	if msg.Photo != nil || msg.Document != nil {
 		var fileID string
 		if msg.Photo != nil {
@@ -29,6 +32,10 @@ func (b *Bot) handleMessage(msg *tgbotapi.Message) error {
 		}
 		if msg.Document != nil {
 			fileID = msg.Document.FileID
+			if !supported[msg.Document.MimeType] {
+				b.bot.Send(tgbotapi.NewMessage(msg.From.ID, "❌ изображения такого типа не поддерживаются"))
+				return nil
+			}
 		}
 		averageColor, err := b.getAverageColor(fileID, msg.From.ID)
 		if err != nil {
@@ -38,8 +45,9 @@ func (b *Bot) handleMessage(msg *tgbotapi.Message) error {
 		if err != nil {
 			return errors.Wrap(err, "creating color preview")
 		}
-		averageColorHex := fmt.Sprintf("#%02x%02x%02x", averageColor[0], averageColor[1], averageColor[2])
+		averageColorHex := fmt.Sprintf("`#%02x%02x%02x`", averageColor[0], averageColor[1], averageColor[2])
 		preview.Caption = averageColorHex
+		preview.ParseMode = tgbotapi.ModeMarkdownV2
 		_, err = b.bot.Send(preview)
 		if err != nil {
 			return err
